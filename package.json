@@ -20,6 +20,7 @@
   "homepage": "https://github.com/pranavkk10/demo_backend#readme",
   "dependencies": {
     "express": "^5.2.1",
+    "mongoose": "^9.3.3",
     "packagename": "^2.0.1"
   },
   "devDependencies": {
