@@ -126,11 +126,12 @@ let cards = [
   }
 ];
 
-app.get("/api/cards", (req, res) => {
+
+app.get("/cards", (req, res) => {
   res.json(cards);
 });
 
-app.get("/api/cards/:id", (req, res) => {
+app.get("/cards/:id", (req, res) => {
   const card = cards.find((c) => c._id === parseInt(req.params.id));
   if (!card) {
     return res.status(404).json({ message: "Card not found" });
@@ -138,6 +139,8 @@ app.get("/api/cards/:id", (req, res) => {
   res.json(card);
 });
 
-app.listen(3001, () => {
-  console.log("Server is up and running");
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

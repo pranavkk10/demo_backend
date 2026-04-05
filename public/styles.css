@@ -1,4 +1,29 @@
-
-h1 {
-    color:skyblue;
-}
+body {
+    font-family: Arial, sans-serif;
+    background-color: #0b1f3a;
+    color: white;
+    text-align: center;
+    padding: 40px;
+  }
+  
+  h1 {
+    color: #f4c542;
+    margin-bottom: 30px;
+  }
+  
+  .container {
+    background: #142d4c;
+    padding: 20px;
+    border-radius: 10px;
+    display: inline-block;
+  }
+  
+  a {
+    color: #00d4ff;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
