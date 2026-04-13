@@ -1,8 +1,18 @@
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
+const Joi = require("joi");
+const fs = require("fs");
 
 const app = express();
+
+if (!fs.existsSync("./public")) {
+  fs.mkdirSync("./public");
+}
+
+if (!fs.existsSync("./public/images")) {
+  fs.mkdirSync("./public/images", { recursive: true });
+}
 
 app.use(express.static("public"));
 app.use(express.json());
@@ -17,7 +27,7 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 let cards = [
   {
@@ -30,7 +40,6 @@ let cards = [
     sport: "Basketball",
     grade: "PSA 10",
     price: 250000,
-    rarity: "Ultra Rare",
     description: "Iconic rookie-era card highly prized by collectors."
   },
   {
@@ -43,7 +52,6 @@ let cards = [
     sport: "Hockey",
     grade: "PSA 10",
     price: 150000,
-    rarity: "Rare",
     description: "Classic Gretzky early-career issue from O-Pee-Chee."
   },
   {
@@ -56,7 +64,6 @@ let cards = [
     sport: "Football",
     grade: "PSA 8",
     price: 125000,
-    rarity: "Very Rare",
     description: "Popular collector's card with limited print run."
   },
   {
@@ -69,7 +76,6 @@ let cards = [
     sport: "Basketball",
     grade: "PSA 10",
     price: 95000,
-    rarity: "Rare",
     description: "Early Kobe card in chrome finish; highly desirable."
   },
   {
@@ -82,7 +88,6 @@ let cards = [
     sport: "Soccer",
     grade: "PSA 10",
     price: 85000,
-    rarity: "Rare",
     description: "Topps release during Messi's prime years."
   },
   {
@@ -95,7 +100,6 @@ let cards = [
     sport: "Baseball",
     grade: "PSA 10",
     price: 75000,
-    rarity: "Rare",
     description: "Early Jeter card from the SP set."
   },
   {
@@ -108,7 +112,6 @@ let cards = [
     sport: "Basketball",
     grade: "PSA 9",
     price: 65000,
-    rarity: "Uncommon",
     description: "A standout LeBron rookie-era card."
   },
   {
@@ -121,11 +124,21 @@ let cards = [
     sport: "Baseball",
     grade: "PSA 9",
     price: 45000,
-    rarity: "Uncommon",
     description: "Prospect card from early in Judge's career."
   }
 ];
 
+const cardSchema = Joi.object({
+  name: Joi.string().min(2).max(100).required(),
+  img_name: Joi.string().min(3).max(300).required(),
+  brand: Joi.string().min(2).max(100).required(),
+  year: Joi.number().integer().min(1800).max(2100).required(),
+  card_number: Joi.string().min(1).max(30).required(),
+  sport: Joi.string().min(2).max(50).required(),
+  grade: Joi.string().min(1).max(30).required(),
+  price: Joi.number().min(0).required(),
+  description: Joi.string().min(10).max(500).required()
+});
 
 app.get("/cards", (req, res) => {
   res.json(cards);
@@ -133,10 +146,60 @@ app.get("/cards", (req, res) => {
 
 app.get("/cards/:id", (req, res) => {
   const card = cards.find((c) => c._id === parseInt(req.params.id));
+
   if (!card) {
     return res.status(404).json({ message: "Card not found" });
   }
+
   res.json(card);
+});
+
+app.post("/cards", upload.single("image"), (req, res) => {
+  console.log("POST /cards hit");
+  console.log("BODY:", req.body);
+  console.log("FILE:", req.file);
+
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: "Image file is required"
+    });
+  }
+
+  const cardData = {
+    name: req.body.name,
+    img_name: `images/${req.file.filename}`,
+    brand: req.body.brand,
+    year: Number(req.body.year),
+    card_number: req.body.card_number,
+    sport: req.body.sport,
+    grade: req.body.grade,
+    price: Number(req.body.price),
+    description: req.body.description
+  };
+
+  const { error } = cardSchema.validate(cardData, { abortEarly: false });
+
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      errors: error.details.map((detail) => detail.message)
+    });
+  }
+
+  const newCard = {
+    _id: cards.length ? cards[cards.length - 1]._id + 1 : 1,
+    ...cardData
+  };
+
+  cards.push(newCard);
+
+  res.status(201).json({
+    success: true,
+    message: "Card added successfully",
+    card: newCard
+  });
 });
 
 const PORT = process.env.PORT || 3001;
