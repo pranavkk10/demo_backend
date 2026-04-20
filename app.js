@@ -148,17 +148,16 @@ app.get("/cards/:id", (req, res) => {
   const card = cards.find((c) => c._id === parseInt(req.params.id));
 
   if (!card) {
-    return res.status(404).json({ message: "Card not found" });
+    return res.status(404).json({
+      success: false,
+      message: "Card not found"
+    });
   }
 
   res.json(card);
 });
 
 app.post("/cards", upload.single("image"), (req, res) => {
-  console.log("POST /cards hit");
-  console.log("BODY:", req.body);
-  console.log("FILE:", req.file);
-
   if (!req.file) {
     return res.status(400).json({
       success: false,
@@ -199,6 +198,76 @@ app.post("/cards", upload.single("image"), (req, res) => {
     success: true,
     message: "Card added successfully",
     card: newCard
+  });
+});
+
+app.put("/cards/:id", upload.single("image"), (req, res) => {
+  const id = parseInt(req.params.id);
+  const cardIndex = cards.findIndex((card) => card._id === id);
+
+  if (cardIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: "Card not found"
+    });
+  }
+
+  const currentCard = cards[cardIndex];
+
+  const cardData = {
+    name: req.body.name,
+    img_name: req.file ? `images/${req.file.filename}` : currentCard.img_name,
+    brand: req.body.brand,
+    year: Number(req.body.year),
+    card_number: req.body.card_number,
+    sport: req.body.sport,
+    grade: req.body.grade,
+    price: Number(req.body.price),
+    description: req.body.description
+  };
+
+  const { error } = cardSchema.validate(cardData, { abortEarly: false });
+
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      errors: error.details.map((detail) => detail.message)
+    });
+  }
+
+  const updatedCard = {
+    _id: currentCard._id,
+    ...cardData
+  };
+
+  cards[cardIndex] = updatedCard;
+
+  res.status(200).json({
+    success: true,
+    message: "Card updated successfully",
+    card: updatedCard
+  });
+});
+
+app.delete("/cards/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const cardIndex = cards.findIndex((card) => card._id === id);
+
+  if (cardIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: "Card not found"
+    });
+  }
+
+  const deletedCard = cards[cardIndex];
+  cards.splice(cardIndex, 1);
+
+  res.status(200).json({
+    success: true,
+    message: "Card deleted successfully",
+    card: deletedCard
   });
 });
 
