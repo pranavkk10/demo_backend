@@ -1,8 +1,10 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const Joi = require("joi");
 const fs = require("fs");
+const mongoose = require("mongoose");
 
 const app = express();
 
@@ -17,6 +19,13 @@ if (!fs.existsSync("./public/images")) {
 app.use(express.static("public"));
 app.use(express.json());
 app.use(cors());
+
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("Connected to mongodb..."))
+  .catch((err) => console.error("could not connect to mongodb...", err));
+
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
