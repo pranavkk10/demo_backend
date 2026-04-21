@@ -68,9 +68,11 @@ app.get("/cards", async (req, res) => {
     const cards = await Card.find();
     res.json(cards);
   } catch (error) {
+    console.error("GET /cards error:", error);
     res.status(500).json({
       success: false,
-      message: "Error retrieving cards"
+      message: "Error retrieving cards",
+      error: error.message
     });
   }
 });
